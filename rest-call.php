@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name:       wpdb
- * Plugin URI:        https://mahdivalipoor.ir/plugins/wpdb/
- * Description:       wpdb
+ * Plugin Name:       Rest Call
+ * Plugin URI:        https://mahdivalipoor.ir/plugins/rest-call/
+ * Description:       Rest Api Call
  * Version:           0.9.0
  * Requires at least: 5.2
  * Requires PHP:      7.2
@@ -15,125 +15,45 @@
 
 defined('ABSPATH') or die;
 
-if (!class_exists('DbCall')) {
-    class DbCall
-    {        
+if (!class_exists('RestCall')) {
+    class RestCall
+    {
         public function __construct()
         {
-            $this->show();
+            $this->addHooks();
         }
-        
-        public function insert() {
-            global $wpdb;
-            $table_name = $wpdb->prefix . 'posts';
 
-            //check wp_insert_post() function
-            $data = array(
-                'post_title' => 'Example Post',
-                'post_content' => 'Decription',
+        private function addHooks()
+        {
+            add_action( 'admin_menu', array($this,'registerAbusAdminMenu') );
+        }
+
+        public function registerAbusAdminMenu() {
+            add_menu_page(
+                'Rest Call',
+                'Rest Call',
+                'manage_options',
+                'restCall',
+                array($this,'helloAbu')
             );
+        }
 
-            $success = $wpdb->insert($table_name, $data);
+        public function helloAbu() {
+            $json = wp_remote_retrieve_body(wp_remote_get('https://api.restful-api.dev/objects'));
+            $json = json_decode( preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $json), true );
 
-            if ($success) {
-                $lastID = $wpdb->insert_id;
-            } else {
-                $lastID = 'ERR';
+            $decoded_json[] = $json;
+
+            echo '<h2>List from rest api</h2>';
+
+            for ($i=0; $i < count($decoded_json[0]); $i++) { 
+                echo $decoded_json[0][$i]['id'] .
+                    " | " .
+                    $decoded_json[0][$i]['name'] .
+                    '<br/>';
             }
-
-            echo 'last id:' . $lastID;
         }
-
-        public function show() {
-            global $wpdb;
-
-            // show errors
-            $wpdb->show_errors();
-
-            $posts = $wpdb->get_results(
-                "SELECT post_title FROM $wpdb->posts
-                 WHERE post_status = 'publish'
-                 AND post_type = 'post'
-                 ORDER BY post_date ASC LIMIT 0,4"
-                 );
-
-            var_dump($posts);
-        }
-
-        public function show_row() {
-            global $wpdb;
-
-            // show errors
-            $wpdb->show_errors();
-
-            $row = $wpdb->get_row(
-                "SELECT * FROM $wpdb->posts
-                 WHERE post_status = 'publish'
-                 AND post_type = 'post'
-                 ORDER BY comment_count DESC LIMIT 0,1"
-                 );
-
-            var_dump($row);
-        }
-
-        public function show_col() {
-            global $wpdb;
-
-            // show errors
-            $wpdb->show_errors();
-
-            $cols = $wpdb->get_col(
-                "SELECT post_title FROM $wpdb->posts
-                 WHERE post_status = 'publish'
-                 AND post_type = 'post'
-                 ORDER BY comment_count DESC LIMIT 0,4"
-                 );
-
-            var_dump($cols);
-        }
-
-        public function show_var() {
-            global $wpdb;
-
-            // show errors
-            $wpdb->show_errors();
-
-            $regis_date = $wpdb->get_var(
-                "SELECT user_registered FROM $wpdb->users
-                 WHERE user_login = 'root'"
-                 );
-
-            var_dump($regis_date);
-        }
-
-        public function prepare_test() {
-            global $wpdb;
-
-            // show errors
-            $wpdb->show_errors();
-
-            $user = 'root';
-            $regis_date = $wpdb->prepare(
-                "SELECT user_registered FROM $wpdb->users
-                 WHERE user_login = %s",$user
-                 );
-            
-            $res = $wpdb->get_var($regis_date);
-
-            var_dump($res);
-        }
-
-        // $wpdb->insert
-        // $wpdb->update
-        // $wpdb->delete
-
-        // $wpdb->num_rows
-        // $wpdb->rows_affected
-        // $wpdb->insert_id
-        // $wpdb->prefix
-        // $wpdb->{core tables}
-
     }
     
-    $restCall = new DbCall;
+    $restCall = new RestCall;
 }
