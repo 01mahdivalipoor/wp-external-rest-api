@@ -26,6 +26,7 @@ if (!class_exists('RestCall')) {
         private function addHooks()
         {
             add_action( 'admin_menu', array($this,'registerAbusAdminMenu') );
+            add_action( 'admin_enqueue_scripts', array($this, 'script') );
         }
 
         public function registerAbusAdminMenu() {
@@ -52,6 +53,14 @@ if (!class_exists('RestCall')) {
                     $decoded_json[0][$i]['name'] .
                     '<br/>';
             }
+            
+            echo "<br/><button type='button' onclick='btnPress()'>Send</button>";
+            echo "<input type='text' id='restCallInput' />";
+            echo "<div id='result'></div>";
+        }
+
+        public function script() {
+            wp_enqueue_script( 'rest_call_script', plugin_dir_url( __FILE__ ) . 'rest-call.js', array(), '1.0' );
         }
     }
     
